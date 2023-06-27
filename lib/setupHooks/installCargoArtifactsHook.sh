@@ -4,7 +4,7 @@ compressAndInstallCargoArtifactsDir() {
 
   mkdir -p "${dir}"
 
-  local dest="${dir}/target.tar.zst"
+  local dest="${dir}/target.tar.zst.mangled"
   echo "compressing ${cargoTargetDir} to ${dest}"
   (
     export SOURCE_DATE_EPOCH=1
@@ -14,7 +14,7 @@ compressAndInstallCargoArtifactsDir() {
       --group=0 \
       --numeric-owner \
       --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
-      -c "${cargoTargetDir}" | zstd "-T${NIX_BUILD_CORES:-0}" -o "${dest}"
+      -c "${cargoTargetDir}" | zstd "-T${NIX_BUILD_CORES:-0}" | base64 > "${dest}"
   )
 }
 

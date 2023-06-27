@@ -8,7 +8,7 @@ inheritCargoArtifacts() {
     local candidateTarZst="${preparedArtifacts}/target.tar.zst"
     local candidateTargetDir="${preparedArtifacts}/target"
 
-    if [ -f "${candidateTarZst}" ]; then
+    if [ -f "${candidateTarZst}" -o -f "${candidateTarZst}.mangled" ]; then
       local preparedArtifacts="${candidateTarZst}"
     elif [ -d "${candidateTargetDir}" ]; then
       local preparedArtifacts="${candidateTargetDir}"
@@ -16,7 +16,12 @@ inheritCargoArtifacts() {
   fi
 
   mkdir -p "${cargoTargetDir}"
-  if [ -f "${preparedArtifacts}" ]; then
+  if [ -f "${preparedArtifacts}.mangled" ]; then
+    echo "decompressing mangled cargo artifacts from ${preparedArtifacts} to ${cargoTargetDir}"
+
+    base64 -d "${preparedArtifacts}.mangled" | zstd -d --stdout | \
+      tar -x -C "${cargoTargetDir}" --strip-components=1
+  elif [ -f "${preparedArtifacts}" ]; then
     echo "decompressing cargo artifacts from ${preparedArtifacts} to ${cargoTargetDir}"
 
     zstd -d "${preparedArtifacts}" --stdout | \
